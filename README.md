@@ -17,6 +17,16 @@ A list of our bot's features!
 The SafeSpace Discord Bot contains a verification system. Upon joining, new users will be required to agree to a server's rules, as well as terms and conditions. This can be done with a reaction to the verification message, which will then grant the user access to the server.
 ### Setup
 (placeholder)
+- Add the bot to your server
+- Create a rules and verification channel with ".set_rules_channel [channel name]" and ".set_ver_channel [channel name]" respectively
+- Set the rules with ".set_rules [rule title:rule description\n...]" <- Use this format (it's easier to write the rules in a notepad first then copy and pasting it into the message)
+- Set the verification message with ".set_ver_message [message]"
+- Give the @everyone role only the following permissions: "View Channels" and "Read Message History"
+- Create a verification role with ".set_ver_role [role name]"
+- Edit the verification role permissions to your liking in the Discord server settings
+- IMPORTANT: Be sure to set the bot's "Safe Space"' role above the verification role in the role topology of your server, bot will not work properly otherwise
+
+You have now setup the bot on your server!
 
 ## Kick System
 (Picture of kick system)

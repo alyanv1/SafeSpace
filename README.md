@@ -16,7 +16,6 @@ A list of our bot's features!
 
 The SafeSpace Discord Bot contains a verification system. Upon joining, new users will be required to agree to a server's rules, as well as terms and conditions. This can be done with a reaction to the verification message, which will then grant the user access to the server.
 ### Setup
-(placeholder)
 - Add the bot to your server
 - Create a rules and verification channel with ".set_rules_channel [channel name]" and ".set_ver_channel [channel name]" respectively
 - Set the rules with ".set_rules [rule title:rule description\n...]" <- Use this format (it's easier to write the rules in a notepad first then copy and pasting it into the message)

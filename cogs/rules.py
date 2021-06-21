@@ -1,6 +1,7 @@
+import json
 import discord
 from discord.ext import commands
-import main
+from cogs import server_setup
 
 
 def get_rules() -> str:
@@ -8,7 +9,7 @@ def get_rules() -> str:
     Get's rules from rules_message.txt as a string
 
     :return: str
-
+        Rules as a string
     """
     with open("rules_message.txt", "r") as f:
         rules_message = f.read()
@@ -17,32 +18,57 @@ def get_rules() -> str:
 
 
 class Rules(commands.Cog):
+    """
+    Setup the rules using these commands
+    """
 
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command()
-    async def update_rules(self, ctx: discord.ext.commands.context.Context):
+    @commands.has_permissions(administrator=True)
+    async def set_rules(self, ctx: discord.ext.commands.context.Context, *, rules: str):
         """
         Update rules in rules channel
 
         :param ctx: discord.ext.commands.context.Context
             Payload of useful information from discord API
+        :param rules: str
+            Rules to be set
         """
-        channel = ctx.guild.get_channel(main.rules_channel_id)
-        message = await channel.fetch_message(main.rules_message_id)
+        guild_info = server_setup.get_guild_info(ctx.guild)
 
-        embed = await format_rules(title="Rules", description="Here are the rules")
+        if guild_info["rulesChannelID"] is not None:
+            rules_channel = server_setup.get_channel(guild=ctx.guild, channel_id=guild_info["rulesChannelID"])
+            embed = await format_rules(rules=rules, title="Rules",
+                                       description="You must follow these rules at all times")
 
-        await message.edit(embed=embed)
+            if guild_info["rulesMessageID"] is not None:
+                message = await rules_channel.fetch_message(guild_info["rulesMessageID"])
+
+                await message.edit(embed=embed)
+
+            else:
+                message = await rules_channel.send(embed=embed)
+                guild_info["rulesMessageID"] = message.id
+
+                server_setup.update_guild(guild_info=guild_info)
+
+            guild_info["rules"] = rules
+            server_setup.update_guild(guild_info=guild_info)
+
+        else:
+            await ctx.send("You must create a rules channel before you may set the rules message.")
 
         print("Rules have been updated.")
 
 
-async def format_rules(title: str = None, description: str = None) -> discord.Embed:
+async def format_rules(rules: str = None, title: str = None, description: str = None) -> discord.Embed:
     """
     Format rules embed to make it look nicer
 
+    :param rules: str
+        Rules to be set
     :param title: str
         Title of embed
     :param description: str
@@ -50,23 +76,21 @@ async def format_rules(title: str = None, description: str = None) -> discord.Em
     :return embed: discord.Embed
         Embedded rules
     """
+    if rules is not None:
+        rules_list = rules.split("\n")
 
-    rules_message = get_rules()
-    rules_list = rules_message.split("\n")
+        embed = discord.Embed(
+            title=title,
+            description=description,
+            colour=discord.Colour.blue()
+        )
 
-    embed = discord.Embed(
-        title=title,
-        description=description,
-        colour=discord.Colour.blue()
-    )
+        embed.set_footer(text="Safe Space Discord Bot")
 
-    embed.set_footer(text="Safe Space Discord Bot")
-
-    for rule in rules_list:
-        contents = rule.split(":")
-        embed.add_field(name=str(contents[0]), value=f'`{str(contents[1])}`', inline=False)
-
-    return embed
+        for rule in rules_list:
+            contents = rule.split(":")
+            embed.add_field(name=str(contents[0]), value=f'`{str(contents[1])}`', inline=False)
+        return embed
 
 
 def setup(bot):

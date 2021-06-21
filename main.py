@@ -3,43 +3,24 @@ import json
 import os
 from discord.ext import commands
 
-bot_token = "ODM3NDAyNjQ1MzQxMjc0MTIy.YIsB_A.xh2rDUNM6VFu6NGBjCuvH1UoM6w"
+bot_token: str
 
-bot = commands.Bot(command_prefix=".", intents=discord.Intents.all())
-
-guild_id = 837351222833971211  # Current guild id for the server our bot is in
-
-# Channel and message id's
-verification_channel_id: int = None
-verification_message_id: int = None
-rules_channel_id: int = None
-rules_message_id: int = None
+with open("bot_token", "r") as f:
+    bot_token = f.read()
 
 
-def load_variables():
-    """
-    Load channel and message id's from guilds.json
-    """
-    global verification_channel_id
-    global verification_message_id
-    global rules_channel_id
-    global rules_message_id
-
+def get_prefix(client, message):
     with open("guilds.json", "r") as f:
         data = json.load(f)
 
-        guilds = data["guilds"]
+    guilds = data["guilds"]
 
     for guild in guilds:
-        if guild["guildID"] == guild_id:
-            verification_channel_id = guild["verificationChannelID"]
-            verification_message_id = guild["verificationMessageID"]
-
-            rules_channel_id = guild["rulesChannelID"]
-            rules_message_id = guild["rulesMessageID"]
+        if guild["guildID"] == message.guild.id:
+            return guild["prefix"]
 
 
-load_variables()
+bot = commands.Bot(command_prefix=get_prefix, intents=discord.Intents.all())
 
 
 # Ready message
@@ -98,6 +79,7 @@ async def clear_error(ctx: discord.ext.commands.context.Context, error: discord.
 
 # Load cogs
 @bot.command()
+@commands.has_permissions(administrator=True)
 async def load(extension: str):
     """
     Load a cog
@@ -106,10 +88,12 @@ async def load(extension: str):
         Cog extension to be loaded
     """
     bot.load_extension(f"cogs.{extension}")
+    print(f"{extension} has been loaded.")
 
 
 # Unload cogs
 @bot.command()
+@commands.has_permissions(administrator=True)
 async def unload(extension: str):
     """
     Unload cog
@@ -118,11 +102,13 @@ async def unload(extension: str):
         Cog extension to be unloaded
     """
     bot.unload_extension(f"cogs.{extension}")
+    print(f"{extension} has been unloaded.")
 
 
 # Load current cogs in ./cogs directory
 for filename in os.listdir("./cogs"):
     if filename.endswith(".py"):
         bot.load_extension(f"cogs.{filename[:-3]}")
+        print(f"{filename} has been loaded.")
 
 bot.run(bot_token)

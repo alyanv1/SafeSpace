@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
-import main
 from cogs import user_verification
+from cogs import server_setup
 
 
 class Reactions(commands.Cog):
@@ -9,7 +9,6 @@ class Reactions(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # Reaction added onto message
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.raw_models.RawReactionActionEvent):
         """
@@ -18,23 +17,29 @@ class Reactions(commands.Cog):
         :param payload: discord.raw_models.RawReactionActionEvent
             Useful information from discord API
         """
-
         if payload.member != self.bot.user:
-            msg_id = payload.message_id
-            if msg_id == main.verification_message_id:
-                guild_id = payload.guild_id
-                guild = discord.utils.find(lambda g: g.id == guild_id, self.bot.guilds)
-                role = discord.utils.get(guild.roles, name='Cool')
-                member = payload.member
+            guild_info = server_setup.get_guild_info(self.bot.get_guild(payload.guild_id))
 
-                await user_verification.UserVerification.dm_welcome_message(payload, member)
+            if guild_info["verifiedRoleID"] is not None:
+                if payload.message_id == guild_info["verificationMessageID"]:
+                    guild = self.bot.get_guild(payload.guild_id)
+                    verified_role = server_setup.get_role(guild=guild, role_id=guild_info["verifiedRoleID"])
+                    member = payload.member
 
-                if member is not None:
-                    await member.add_roles(role)
-                else:
-                    print('Member not found.')
+                    await user_verification.dm_welcome_message(member=member)
 
-    # Reaction removed from message
+                    if member is not None:
+                        await member.add_roles(verified_role)
+                    else:
+                        print('Member not found.')
+            elif payload.channel_id == guild_info["verificationChannelID"]:
+                verification_message = await server_setup.get_channel(self.bot.get_guild(payload.guild_id),
+                                                                      guild_info["verificationChannelID"]).fetch_message(
+                    guild_info["verificationMessageID"])
+                await verification_message.remove_reaction(payload.emoji, payload.member)
+
+                print("Verified role must be setup before reaction can work.")
+
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload: discord.raw_models.RawReactionActionEvent):
         """
@@ -43,18 +48,21 @@ class Reactions(commands.Cog):
         :param payload: discord.raw_models.RawReactionActionEvent
             Useful information from discord API
         """
-
         if payload.member != self.bot.user:
-            msg_id = payload.message_id
-            if msg_id == main.verification_message_id:
-                guild_id = payload.guild_id
-                guild = discord.utils.find(lambda g: g.id == guild_id, self.bot.guilds)
-                role = discord.utils.get(guild.roles, name='Cool')
-                member = guild.get_member(payload.user_id)
-                if member is not None:
-                    await member.remove_roles(role)
-                else:
-                    print('Member not found.')
+            guild_info = server_setup.get_guild_info(self.bot.get_guild(payload.guild_id))
+
+            if guild_info["verifiedRoleID"] is not None:
+                msg_id = payload.message_id
+                if msg_id == guild_info["verificationMessageID"]:
+                    guild = self.bot.get_guild(payload.guild_id)
+
+                    verified_role = server_setup.get_role(guild=guild, role_id=guild_info["verifiedRoleID"])
+
+                    member = guild.get_member(payload.user_id)
+                    if member is not None:
+                        await member.remove_roles(verified_role)
+                    else:
+                        print('Member not found.')
 
 
 def setup(bot):

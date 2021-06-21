@@ -71,8 +71,16 @@ If a user reaches X warnings, they will be banned from the server.
 `.clear <number>` Clear the specified number of lines from the chat.
 
 # Adding SafeSpace to your Server
+- Add the bot to your server using this link: https://discord.com/api/oauth2/authorize?client_id=837402645341274122&permissions=8&scope=bot
+- Create a rules and verification channel with ".set_rules_channel [channel name]" and ".set_ver_channel [channel name]" respectively
+- Set the rules with ".set_rules [rule title:rule description\n...]" <- Use this format (it's easier to write the rules in a notepad first then copy and pasting it into the message)
+- Set the verification message with ".set_ver_message [message]"
+- Give the @everyone role only the following permissions: "View Channels" and "Read Message History"
+- Create a verification role with ".set_ver_role [role name]"
+- Edit the verification role permissions to your liking in the Discord server settings
+- IMPORTANT: Be sure to set the bot's "Safe Space"' role above the verification role in the role topology of your server, bot will not work properly otherwise
 
-
+You have now setup the bot on your server!
 
 # Feedback & Bug Reports
 Give us feedback on our project/report bugs!

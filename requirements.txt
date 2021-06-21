@@ -15,7 +15,6 @@ crayons==0.4.0
 cryptography==3.4.7
 cymem==2.0.5
 discord.py==1.7.2
-en-core-web-sm==2.2.0
 h11==0.12.0
 h2==4.0.0
 hpack==4.0.0
